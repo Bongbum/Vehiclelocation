@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vehicle Tracker</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #mapid {
+      height: 600px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Vehicle Tracker</h2>
+  <label for="vehicleSelect">Select a vehicle:</label>
+  <select id="vehicleSelect"></select>
+  <div id="mapid"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initial map setup
+    var mymap = L.map('mapid').setView([0, 0], 2);
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        maxZoom: 18,
+        id: 'mapbox/streets-v11',
+        accessToken: 'your.mapbox.access.token'
+    }).addTo(mymap);
+
+    // Load data from Google Apps Script
+    fetch('https://script.google.com/macros/s/your_script_id/exec')
+      .then(response => response.json())
+      .then(data => {
+        // Data processing - Replace '0' with the index of the column in your sheet
+        var vehicleNumbers = [...new Set(data.map(item => item[1]))]; // Assuming vehicle number is the second column
+        var select = document.getElementById('vehicleSelect');
+        
+        // Populate dropdown
+        vehicleNumbers.forEach(num => {
+          var option = document.createElement('option');
+          option.value = num;
+          option.text = num;
+          select.appendChild(option);
+        });
+
+        // Dropdown event listener
+        select.addEventListener('change', function() {
+          var selectedVehicle = this.value;
+          var vehicleData = data.filter(item => item[1] === selectedVehicle); // Filter data for selected vehicle
+          
+          // Get latest position - Replace '2' and '3' with the indexes of the latitude and longitude columns in your sheet
+          var latestPosition = vehicleData[vehicleData.length - 1];
+          var lat = latestPosition[2];
+          var lon = latestPosition[3];
+
+          // Update map
+          mymap.setView([lat, lon], 13);
+          L.marker([lat, lon]).addTo(mymap);
+        });
+      })
+      .catch(error => console.error('Error:', error));
+  </script>
+</body>
+</html>
