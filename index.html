@@ -11,8 +11,11 @@
 </head>
 <body>
   <h2>Vehicle Tracker</h2>
-  <label for="vehicleSelect">Select vehicle:</label>
-  <select id="vehicleSelect"></select>
+  <label for="numberSelect1">Select 1st number:</label>
+  <select id="numberSelect1"></select>
+
+  <label for="numberSelect2">Select 2nd number:</label>
+  <select id="numberSelect2"></select>
 
   <div id="mapid"></div>
 
@@ -31,27 +34,37 @@
       .then(response => response.json())
       .then(data => {
         // Data processing - Replace '0' with the index of the column in your sheet
-        var vehicleNumbers = [...new Set(data.map(item => item[1] + '-' + item[2]))]; // Assuming 1st number is the second column and 2nd number is the third column
-
-        var select = document.getElementById('vehicleSelect');
+        var numbers1 = [...new Set(data.map(item => item[1]))]; // Assuming 1st number is the second column
+        var numbers2 = [...new Set(data.map(item => item[2]))]; // Assuming 2nd number is the third column
         
-        // Populate dropdown
-        vehicleNumbers.forEach(num => {
+        var select1 = document.getElementById('numberSelect1');
+        var select2 = document.getElementById('numberSelect2');
+        
+        // Populate dropdowns
+        numbers1.forEach(num => {
           var option = document.createElement('option');
           option.value = num;
           option.text = num;
-          select.appendChild(option);
+          select1.appendChild(option);
         });
 
-        // Dropdown event listener
-        select.addEventListener('change', updateMap);
+        numbers2.forEach(num => {
+          var option = document.createElement('option');
+          option.value = num;
+          option.text = num;
+          select2.appendChild(option);
+        });
+
+        // Dropdown event listeners
+        select1.addEventListener('change', updateMap);
+        select2.addEventListener('change', updateMap);
 
         function updateMap() {
-          var selectedVehicle = select.value;
-          var vehicleNumbers = selectedVehicle.split('-');
+          var selectedNumber1 = select1.value;
+          var selectedNumber2 = select2.value;
           
-          // Filter data for selected vehicle
-          var vehicleData = data.filter(item => item[1] === vehicleNumbers[0] && item[2] === vehicleNumbers[1]);
+          // Filter data for selected numbers
+          var vehicleData = data.filter(item => item[1] === selectedNumber1 && item[2] === selectedNumber2);
           
           // Get latest position - Replace '3' and '4' with the indexes of the latitude and longitude columns in your sheet
           var latestPosition = vehicleData[vehicleData.length - 1];
@@ -67,7 +80,7 @@
           });
 
           // Add marker to map
-          L.marker([lat, lon]).addTo(mymap).bindPopup(`Vehicle: ${selectedVehicle}`);
+          L.marker([lat, lon]).addTo(mymap).bindPopup(`1st number: ${selectedNumber1}, 2nd number: ${selectedNumber2}`);
         }
       });
   </script>
