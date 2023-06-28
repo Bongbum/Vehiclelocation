@@ -11,8 +11,9 @@
 </head>
 <body>
   <h2>Vehicle Tracker</h2>
-  <label for="vehicleSelect">Select a vehicle:</label>
+  <label for="vehicleSelect">Select vehicle:</label>
   <select id="vehicleSelect"></select>
+
   <div id="mapid"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -30,7 +31,8 @@
       .then(response => response.json())
       .then(data => {
         // Data processing - Replace '0' with the index of the column in your sheet
-        var vehicleNumbers = [...new Set(data.map(item => item[1]))]; // Assuming vehicle number is the second column
+        var vehicleNumbers = [...new Set(data.map(item => item[1] + '-' + item[2]))]; // Assuming 1st number is the second column and 2nd number is the third column
+
         var select = document.getElementById('vehicleSelect');
         
         // Populate dropdown
@@ -42,21 +44,32 @@
         });
 
         // Dropdown event listener
-        select.addEventListener('change', function() {
-          var selectedVehicle = this.value;
-          var vehicleData = data.filter(item => item[1] === selectedVehicle); // Filter data for selected vehicle
-          
-          // Get latest position - Replace '2' and '3' with the indexes of the latitude and longitude columns in your sheet
-          var latestPosition = vehicleData[vehicleData.length - 1];
-          var lat = latestPosition[2];
-          var lon = latestPosition[3];
+        select.addEventListener('change', updateMap);
 
-          // Update map
-          mymap.setView([lat, lon], 13);
-          L.marker([lat, lon]).addTo(mymap);
-        });
-      })
-      .catch(error => console.error('Error:', error));
+        function updateMap() {
+          var selectedVehicle = select.value;
+          var vehicleNumbers = selectedVehicle.split('-');
+          
+          // Filter data for selected vehicle
+          var vehicleData = data.filter(item => item[1] === vehicleNumbers[0] && item[2] === vehicleNumbers[1]);
+          
+          // Get latest position - Replace '3' and '4' with the indexes of the latitude and longitude columns in your sheet
+          var latestPosition = vehicleData[vehicleData.length - 1];
+          
+          var lat = latestPosition[3];
+          var lon = latestPosition[4];
+
+          // Clear map
+          mymap.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+              mymap.removeLayer(layer);
+            }
+          });
+
+          // Add marker to map
+          L.marker([lat, lon]).addTo(mymap).bindPopup(`Vehicle: ${selectedVehicle}`);
+        }
+      });
   </script>
 </body>
 </html>
