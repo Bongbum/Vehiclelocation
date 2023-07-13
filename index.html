@@ -1,92 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Vehicle Tracker</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    #mapid {
-      height: 400px;
-      width: 400px;
-      position: relative; /* You may use absolute if you want to position relative to the whole page */
-      top: 100px; /* Moves map down from the top */
-      left: 100px; /* Moves map to the right from the left side */
-    }
-  </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #dropdown-container {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+        .dropdown {
+            width: 200px;
+            height: 40px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        #mapid {
+            width: 100%;
+            height: 400px;
+            margin-top: 30px;
+        }
+        #selected-vehicle {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <h2>Vehicle Tracker</h2>
-  <label for="numberSelect1">Select 1st number:</label>
-  <select id="numberSelect1"></select>
+    <h2 align=center>GMTCK Test Vehicle Finder</h2>
+    <div id="dropdown-container">
+        <select id="program-dropdown" class="dropdown" onchange="getVehicleNumbers(this.value)">
+            <option selected disabled>Select Program</option>
+        </select>
+        <select id="vehicle-dropdown" class="dropdown" onchange="getLastLocation(this.value)" disabled>
+            <option selected disabled>Select Vehicle Number</option>
+        </select>
+    </div>
+    <div id="selected-vehicle"></div>
+    <div id="mapid"></div>
 
-  <label for="numberSelect2">Select 2nd number:</label>
-  <select id="numberSelect2"></select>
+    <script>
+        var baseUrl = "https://script.google.com/macros/s/AKfycbwtl312eAfNyO6V7G-STbrIfZamdgrIZPhFNk0ypPqb_NjpV6S_7E7tg0m1E_ITIXBy/exec";
 
-  <div id="mapid"></div>
+        var map = L.map('mapid').setView([51.505, -0.09], 13); // initializing map with a default location
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    // Initial map setup
-    var mymap = L.map('mapid').setView([0, 0], 2);
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-        maxZoom: 18,
-        id: 'mapbox/streets-v11',
-        accessToken: 'your.mapbox.access.token'
-    }).addTo(mymap);
+        var marker;
 
-    // Load data from Google Apps Script
-    fetch('https://script.google.com/macros/s/your_script_id/exec')
-      .then(response => response.json())
-      .then(data => {
-        // Data processing - Replace '0' with the index of the column in your sheet
-        var numbers1 = [...new Set(data.map(item => item[1]))]; // Assuming 1st number is the second column
-        var numbers2 = [...new Set(data.map(item => item[2]))]; // Assuming 2nd number is the third column
-        
-        var select1 = document.getElementById('numberSelect1');
-        var select2 = document.getElementById('numberSelect2');
-        
-        // Populate dropdowns
-        numbers1.forEach(num => {
-          var option = document.createElement('option');
-          option.value = num;
-          option.text = num;
-          select1.appendChild(option);
-        });
-
-        numbers2.forEach(num => {
-          var option = document.createElement('option');
-          option.value = num;
-          option.text = num;
-          select2.appendChild(option);
-        });
-
-        // Dropdown event listeners
-        select1.addEventListener('change', updateMap);
-        select2.addEventListener('change', updateMap);
-
-        function updateMap() {
-          var selectedNumber1 = select1.value;
-          var selectedNumber2 = select2.value;
-          
-          // Filter data for selected numbers
-          var vehicleData = data.filter(item => item[1] === selectedNumber1 && item[2] === selectedNumber2);
-          
-          // Get latest position - Replace '3' and '4' with the indexes of the latitude and longitude columns in your sheet
-          var latestPosition = vehicleData[vehicleData.length - 1];
-          
-          var lat = latestPosition[3];
-          var lon = latestPosition[4];
-
-          // Clear map
-          mymap.eachLayer((layer) => {
-            if (layer instanceof L.Marker) {
-              mymap.removeLayer(layer);
-            }
-          });
-
-          // Add marker to map
-          L.marker([lat, lon]).addTo(mymap).bindPopup(`1st number: ${selectedNumber1}, 2nd number: ${selectedNumber2}`);
+        function getPrograms() {
+            var url = baseUrl + "?data=programs";
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var dropdown = document.getElementById("program-dropdown");
+                    dropdown.innerHTML = ""; // clear the previous options
+                    var defaultOption = document.createElement("option");
+                    defaultOption.text = "Select Program";
+                    dropdown.add(defaultOption);
+                    data.forEach((item) => {
+                        var option = document.createElement("option");
+                        option.text = item;
+                        dropdown.add(option);
+                    });
+                    dropdown.disabled = false;
+                })
+                .catch(error => console.error('Error:', error));
         }
-      });
-  </script>
+
+        function getVehicleNumbers(program) {
+            var url = baseUrl + "?data=vehicles&program=" + encodeURIComponent(program);
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var dropdown = document.getElementById("vehicle-dropdown");
+                    dropdown.innerHTML = ""; // clear the previous options
+                    var defaultOption = document.createElement("option");
+                    defaultOption.text = "Select Vehicle Number";
+                    dropdown.add(defaultOption);
+                    data.forEach((item) => {
+                        var option = document.createElement("option");
+                        option.text = item;
+                        dropdown.add(option);
+                    });
+                    dropdown.disabled = false;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+       function getLastLocation(vehicle) {
+    var program = document.getElementById("program-dropdown").value;
+    var url = baseUrl + "?program=" + encodeURIComponent(program) + "&vehicle=" + encodeURIComponent(vehicle);
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            var LatLong = data.split(","); // Assuming latitude and longitude are separated by a comma
+            var location = [parseFloat(LatLong[0]), parseFloat(LatLong[1])];
+            updateMap(location);
+            document.getElementById("selected-vehicle").innerHTML = program + " - " + vehicle;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+        function updateMap(location) {
+            if (marker) { // if marker exists, remove it
+                map.removeLayer(marker);
+            }
+
+            map.setView(location, 14); // set view to the new location
+            marker = L.marker(location).addTo(map); // add a new marker
+        }
+
+        window.onload = getPrograms;
+    </script>
 </body>
 </html>
