@@ -42,7 +42,7 @@
     <div id="mapid"></div>
 
     <script>
-        var baseUrl = "https://script.google.com/macros/s/AKfycbz_WakQGjw8xHmSnzYxWIZhd3oWK1GG8UAIRoMIIncw8_5NK0xsij4RLXQUXQBRvHk-/exec";
+        var baseUrl = "https://script.google.com/macros/s/AKfycbwe2VxNuPLvqzXJF1M361jeyBB9XYxYT23CLkBU0LJ9RHhivc7BEwLDtdfo46j9stPS/exec?type=homepage";
 
         var map = L.map('mapid').setView([51.505, -0.09], 13); // initializing map with a default location
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -52,7 +52,7 @@
         var marker;
 
         function getPrograms() {
-            var url = baseUrl + "?data=programs";
+            var url = baseUrl + "&data=programs";
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -72,7 +72,7 @@
         }
 
         function getVehicleNumbers(program) {
-            var url = baseUrl + "?data=vehicles&program=" + encodeURIComponent(program);
+            var url = baseUrl + "&data=vehicles&program=" + encodeURIComponent(program);
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -91,19 +91,19 @@
                 .catch(error => console.error('Error:', error));
         }
 
-       function getLastLocation(vehicle) {
-    var program = document.getElementById("program-dropdown").value;
-    var url = baseUrl + "?program=" + encodeURIComponent(program) + "&vehicle=" + encodeURIComponent(vehicle);
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            var LatLong = data.split(","); // Assuming latitude and longitude are separated by a comma
-            var location = [parseFloat(LatLong[0]), parseFloat(LatLong[1])];
-            updateMap(location);
-            document.getElementById("selected-vehicle").innerHTML = program + " - " + vehicle;
-        })
-        .catch(error => console.error('Error:', error));
-}
+        function getLastLocation(vehicle) {
+            var program = document.getElementById("program-dropdown").value;
+            var url = baseUrl + "&program=" + encodeURIComponent(program) + "&vehicle=" + encodeURIComponent(vehicle);
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var LatLong = data.split(","); // Assuming latitude and longitude are separated by a comma
+                    var location = [parseFloat(LatLong[0]), parseFloat(LatLong[1])];
+                    updateMap(location);
+                    document.getElementById("selected-vehicle").innerHTML = program + " - " + vehicle;
+                })
+                .catch(error => console.error('Error:', error));
+        }
 
 
         function updateMap(location) {
